@@ -117,7 +117,6 @@ class LocalConnectionStep(types.Step):
   trajectory_id: str = ""
   target: str = ""
 
-
   @classmethod
   def from_dict(cls, step_dict: dict[str, Any]) -> "LocalConnectionStep":
     """Creates a LocalConnectionStep from a dictionary representation of StepUpdate."""
@@ -192,13 +191,14 @@ class LocalConnectionStep(types.Step):
         source=source,
         status=status,
         content=step_dict.get("text", ""),
+        content_delta=step_dict.get("text_delta", ""),
         thinking=step_dict.get("thinking", ""),
+        thinking_delta=step_dict.get("thinking_delta", ""),
         tool_calls=tool_calls,
         error=step_dict.get("error_message", ""),
         is_complete_response=is_complete_response,
         target=step_dict.get("target", ""),
         structured_output=structured_output,
-
     )
 
 

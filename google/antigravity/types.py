@@ -365,12 +365,14 @@ class Step(pydantic.BaseModel):
     status: The status of the step.
     content: The output of the step.
     thinking: Model reasoning/thinking for planner responses.
+    content_delta: Text added since the last update for this step.
+    thinking_delta: Thinking added since the last update for this step.
     tool_calls: List of tool calls associated with the step.
     error: Short error message if the step failed or empty string.
     is_complete_response: True if this step is a completed model response
-      directed at the user, as distinct from a partial streaming chunk.
-      Multiple steps per turn may have this flag set;
-      consumers that want only the last response should iterate fully.
+      directed at the user, as distinct from a partial streaming chunk. Multiple
+      steps per turn may have this flag set; consumers that want only the last
+      response should iterate fully.
     structured_output: The structured output extracted from the finish step.
   """
 
@@ -380,7 +382,9 @@ class Step(pydantic.BaseModel):
   source: StepSource = StepSource.UNKNOWN
   status: StepStatus = StepStatus.UNKNOWN
   content: str = ""
+  content_delta: str = ""
   thinking: str = ""
+  thinking_delta: str = ""
   tool_calls: list[ToolCall] = pydantic.Field(default_factory=list)
   error: str = ""
   is_complete_response: bool | None = None

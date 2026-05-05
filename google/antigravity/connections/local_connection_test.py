@@ -226,6 +226,45 @@ class LocalConnectionTest(unittest.IsolatedAsyncioTestCase):
     self.assertEqual(step.target, "TARGET_USER")
     self.assertFalse(step.is_complete_response)
 
+  def test_local_connection_step_from_dict_content_delta(self):
+    """Tests that content_delta is correctly parsed from text_delta."""
+    step_dict = {
+        "step_index": 1,
+        "text": "Hello world",
+        "text_delta": " world",
+        "state": "STATE_DONE",
+        "source": "SOURCE_MODEL",
+    }
+    step = local_connection.LocalConnectionStep.from_dict(step_dict)
+    self.assertEqual(step.content, "Hello world")
+    self.assertEqual(step.content_delta, " world")
+
+  def test_local_connection_step_from_dict_thinking_delta(self):
+    """Tests that thinking_delta is correctly parsed."""
+    step_dict = {
+        "step_index": 1,
+        "text": "",
+        "thinking": "Step 1. Step 2.",
+        "thinking_delta": " Step 2.",
+        "state": "STATE_DONE",
+        "source": "SOURCE_MODEL",
+    }
+    step = local_connection.LocalConnectionStep.from_dict(step_dict)
+    self.assertEqual(step.thinking, "Step 1. Step 2.")
+    self.assertEqual(step.thinking_delta, " Step 2.")
+
+  def test_local_connection_step_from_dict_deltas_default_empty(self):
+    """Tests that delta fields default to empty when not present."""
+    step_dict = {
+        "step_index": 1,
+        "text": "Hello",
+        "state": "STATE_DONE",
+        "source": "SOURCE_MODEL",
+    }
+    step = local_connection.LocalConnectionStep.from_dict(step_dict)
+    self.assertEqual(step.content_delta, "")
+    self.assertEqual(step.thinking_delta, "")
+
   async def test_turn_hook_deny(self):
     hr = hook_runner.HookRunner()
 
