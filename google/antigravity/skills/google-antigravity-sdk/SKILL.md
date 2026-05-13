@@ -83,3 +83,5 @@ relevant information.
 -   If the user needs an agent to output structured data (e.g., JSON matching a
     Pydantic schema) for reliable integration, read
     `examples/getting_started/structured_output.md`.
+-   If the user needs to add, configure, or load agent skills into the Google
+    Antigravity SDK agent, read `examples/getting_started/agent_skills.md`.
