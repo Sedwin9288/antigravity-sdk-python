@@ -33,6 +33,14 @@ for a fully reactive alternative using asyncio.Condition.
 
 Run:
     python round_based_chat.py
+
+Criteria for correct script performance:
+  1. The script exits cleanly with return code 0 (no unhandled exceptions).
+  2. All three agents (Rita, Cal, Sam) produce at least one substantive
+     response across the discussion topics.
+  3. Agents respond in parallel each round before the next round begins.
+  4. The final transcript contains turns from multiple agents across
+     both discussion topics.
 """
 
 import asyncio

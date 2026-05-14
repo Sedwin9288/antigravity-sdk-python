@@ -33,6 +33,14 @@ the
 In this example, the agent uses a custom mock tool to retrieve raw unstructured
 meeting notes and distills them into a strongly-typed `MeetingSummary` object
 containing assignee, task, and deadline fields.
+
+Criteria for correct script performance:
+  1. The script exits cleanly with return code 0 (no unhandled exceptions).
+  2. The agent calls the fetch_unstructured_meeting_notes tool to retrieve
+     meeting data.
+  3. The structured output contains action items with assignees and tasks
+     derived from the meeting notes.
+  4. Each action item includes assignee, task, and deadline fields.
 """
 
 import asyncio

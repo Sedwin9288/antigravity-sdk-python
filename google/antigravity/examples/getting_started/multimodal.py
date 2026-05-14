@@ -18,6 +18,11 @@ This example demonstrates:
 - Multimodal input: Passing images and documents to the agent.
 - Multimodal output: Enabling the agent to generate images.
 
+Criteria for correct script performance:
+  1. The script exits cleanly with return code 0 (no unhandled exceptions).
+  2. The agent produces a non-empty description of the provided image.
+  3. The agent produces a non-empty summary of the provided document.
+  4. The agent attempts to generate an image when asked.
 """
 
 import asyncio

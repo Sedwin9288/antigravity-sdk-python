@@ -31,6 +31,14 @@ Trade-offs vs. the round-based model:
 
 Run:
     python async_chat.py
+
+Criteria for correct script performance:
+  1. The script exits cleanly with return code 0 (no unhandled exceptions).
+  2. At least two agents produce substantive responses during the
+     discussion.
+  3. The conversation transcript contains entries from multiple agents.
+  4. The discussion terminates, either because agents passed
+     consecutively or because the timeout was reached.
 """
 
 import asyncio

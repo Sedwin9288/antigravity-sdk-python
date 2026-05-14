@@ -19,6 +19,12 @@ This example demonstrates:
    provide guidance to the model.
 2. Catching specific SDK exceptions in application code using try...except
    blocks.
+
+Criteria for correct script performance:
+  1. The script exits cleanly with return code 0 (no unhandled exceptions).
+  2. The agent calls the exploding_tool, which raises a ValueError.
+  3. The on_tool_error hook intercepts the error and provides guidance.
+  4. The agent recovers and produces a response after the error.
 """
 
 import asyncio

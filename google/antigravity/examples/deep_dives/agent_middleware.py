@@ -31,6 +31,16 @@ Hook execution order note: OnToolErrorHook runs on the error path,
 before PostToolCallHook. This means error-recovered calls won't
 appear in the audit log — the error handler short-circuits the
 normal post-call flow.
+
+Criteria for correct script performance:
+  1. The script exits cleanly with return code 0 (no unhandled exceptions).
+  2. The AuditLogHook logs the send_notification call and its result.
+  3. The FallbackHook catches the ValueError from send_to_unknown and
+     guides the agent to recover by using lookup_user.
+  4. The RateLimitHook denies a lookup_user call after the per-tool
+     limit is exceeded.
+  5. The audit log at the end contains entries for successfully completed
+     tool calls.
 """
 
 import asyncio

@@ -30,6 +30,12 @@ Demonstrates:
 2. Specific Denylist rules (e.g., blocking dangerous shell commands like `rm`).
 3. Specific Allowlist rules (e.g., allowing only specific safe commands).
 4. Interactive confirmation rules using `policy.ask_user()`.
+
+Criteria for correct script performance:
+  1. The script exits cleanly with return code 0 (no unhandled exceptions).
+  2. The listing files prompt succeeds because list_directory is allowed.
+  3. The rm -rf prompt is denied by the dangerous command policy.
+  4. The production.key prompt triggers the ask_user policy and is denied.
 """
 
 import asyncio

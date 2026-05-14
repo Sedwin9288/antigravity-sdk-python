@@ -23,6 +23,12 @@ Demonstrates:
    its assigned `conversation_id`, and shutting down.
 3. Session 2 resuming by providing the saved `conversation_id` and verifying
    recall, confirming that the prior trajectory was restored.
+
+Criteria for correct script performance:
+  1. The script exits cleanly with return code 0 (no unhandled exceptions).
+  2. Session 1 establishes context and retrieves a conversation_id.
+  3. Session 2 resumes using the saved conversation_id and save_dir.
+  4. The agent in session 2 recalls information from session 1.
 """
 
 import asyncio

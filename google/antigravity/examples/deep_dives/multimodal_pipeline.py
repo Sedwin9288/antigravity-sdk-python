@@ -28,6 +28,14 @@ Because the discriminator has never seen the generation prompt, its
 description can only come from genuine vision on the pixel data —
 demonstrating true end-to-end multimodal input.
 
+Criteria for correct script performance:
+  1. The script exits cleanly with return code 0 (no unhandled exceptions).
+  2. The generator agent calls the generate_image tool.
+  3. "Phase 1: Generator" and "Phase 2: Discriminator" banners appear in
+     the output.
+  4. A generated image file is found on disk.
+  5. The discriminator agent produces a non-empty description of the image.
+
 To run:
   python3 multimodal_example.py
 """

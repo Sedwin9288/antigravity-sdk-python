@@ -18,6 +18,11 @@ This example demonstrates the simplest way to interact with an agent:
 - Creating a configuration (and how to explicitly select a model).
 - Using the Agent context manager.
 - Sending a simple prompt and awaiting the full text response.
+
+Criteria for correct script performance:
+  1. The script exits cleanly with return code 0 (no unhandled exceptions).
+  2. The agent produces a non-empty text response.
+  3. The response contains "Hello World" or a close greeting variant.
 """
 
 import asyncio

@@ -12,7 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Example demonstrating streaming responses and thoughts in Google Antigravity SDK."""
+"""Example demonstrating streaming responses and thoughts in Google Antigravity SDK.
+
+Criteria for correct script performance:
+  1. The script exits cleanly with return code 0 (no unhandled exceptions).
+  2. The agent produces non-empty streamed thought/reasoning content.
+  3. The agent produces a non-empty streamed final answer.
+  4. The response correctly identifies the answer to the riddle (an echo).
+"""
 
 import asyncio
 

@@ -21,6 +21,13 @@ plan.
 Subagents are valuable for scoping context usage. By delegating a heavy research
 task to a subagent, the main agent avoids filling its own context window with
 all the raw documents, receiving only the synthesized result.
+
+Criteria for correct script performance:
+  1. The script exits cleanly with return code 0 (no unhandled exceptions).
+  2. The agent spawns a subagent to research the examples directory.
+  3. The subagent hook logs fire when the subagent is created and completes.
+  4. The agent produces a non-empty lesson plan based on the subagent's
+     research.
 """
 
 import asyncio

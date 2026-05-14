@@ -16,6 +16,15 @@
 
 This example shows how to use decorators to register hooks for various
 lifecycle events, including session, turn, tool, interaction, and compaction.
+
+Criteria for correct script performance:
+  1. The script exits cleanly with return code 0 (no unhandled exceptions).
+  2. Session lifecycle hooks (on_session_start, on_session_end) fire during
+     the agent session.
+  3. Turn hooks (pre_turn, post_turn) fire around agent chat calls.
+  4. Tool hooks (pre_tool_call_decide, post_tool_call) fire when the agent
+     uses the greet tool.
+  5. The on_tool_error hook fires when the agent calls the broken_tool.
 """
 
 import asyncio

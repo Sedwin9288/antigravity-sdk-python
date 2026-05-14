@@ -35,6 +35,14 @@ This example demonstrates:
 1. Using TemplatedSystemInstructions to override identity and add sections.
 2. Using CustomSystemInstructions to provide a full structured system prompt
    when complete control is needed.
+
+Criteria for correct script performance:
+  1. The script exits cleanly with return code 0 (no unhandled exceptions).
+  2. In the templated case, the agent reviews the code snippet and
+     provides actionable feedback (e.g. about naming conventions).
+  3. The agent uses the check_style_guide tool when reviewing code.
+  4. In the custom case, the agent also produces a meaningful code review
+     consistent with the custom reviewer persona.
 """
 
 import asyncio

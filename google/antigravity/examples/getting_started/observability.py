@@ -18,6 +18,13 @@ This example shows how to:
 - Enable standard Python logging for the SDK.
 - Use hooks to create a basic audit log of tool calls.
 - Access token usage metadata, including thinking tokens.
+
+Criteria for correct script performance:
+  1. The script exits cleanly with return code 0 (no unhandled exceptions).
+  2. The agent calls the get_weather tool and returns weather information.
+  3. The audit log hook fires and logs the tool call.
+  4. Token usage metadata is printed, showing prompt, output, and total
+     token counts.
 """
 
 import asyncio

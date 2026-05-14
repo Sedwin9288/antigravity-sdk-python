@@ -18,6 +18,15 @@ This example shows:
 1. How to define a simple custom tool.
 2. How to define a stateful tool using ToolContext to maintain state
    across turns.
+
+Criteria for correct script performance:
+  1. The script exits cleanly with return code 0 (no unhandled exceptions).
+  2. The agent calls the lookup_fruit_sku tool and returns an SKU value
+     in its response.
+  3. The agent calls the record_fruit tool across multiple turns,
+     maintaining running totals.
+  4. The agent produces meaningful text responses for each conversational
+     turn.
 """
 
 import asyncio

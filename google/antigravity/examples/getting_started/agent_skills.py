@@ -16,6 +16,13 @@
 
 This example demonstrates how to use `skills_paths` in `LocalAgentConfig`
 to point to a directory containing skills and how the agent can recognize them.
+
+Criteria for correct script performance:
+  1. The script exits cleanly with return code 0 (no unhandled exceptions).
+  2. "Loading skills from:" appears in the output, confirming the skill path
+     was resolved.
+  3. The agent produces a non-empty response when asked about its skills.
+  4. The agent's response references at least one skill or capability by name.
 """
 
 import asyncio

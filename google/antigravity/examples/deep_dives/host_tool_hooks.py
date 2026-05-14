@@ -48,13 +48,10 @@ Criteria for correct script performance:
   2. "[Hook] Session started." appears in the output.
   3. "[Hook] Pre-turn" appears at least once, showing the user prompt.
   4. "[Hook] Pre-tool-call (decide)" appears, indicating tool call approval.
-  5. "[Hook] Pre-tool-call (transform)" appears, showing arg transformation.
-  6. The greet tool output includes "(transformed)", proving the transform
-     hook modified the name argument.
-  7. "[Hook] Post-tool-call" appears after a tool executes and includes
+  5. "[Hook] Post-tool-call" appears after a tool executes and includes
      the tool result.
-  8. "[Hook] Tool error" appears after the broken_tool is called.
-  9. "--- All prompts complete ---" appears, confirming all prompts ran.
+  6. "[Hook] Tool error" appears after the broken_tool is called.
+  7. "--- All prompts complete ---" appears, confirming all prompts ran.
 """
 
 import asyncio

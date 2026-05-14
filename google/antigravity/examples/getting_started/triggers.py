@@ -23,6 +23,12 @@ This example demonstrates:
 1. Periodic Triggers (using the `every` helper) - Simulating SRE Ticket Queues.
 2. Custom Triggers (using `@triggers.trigger` decorator) - Simulating CI/CD
    Webhook listeners.
+
+Criteria for correct script performance:
+  1. The script exits cleanly with return code 0 (no unhandled exceptions).
+  2. The periodic trigger fires and sends a system alert to the agent.
+  3. The custom CI/CD trigger fires and sends a build failure alert.
+  4. The agent acknowledges the trigger notifications in its responses.
 """
 
 import asyncio
