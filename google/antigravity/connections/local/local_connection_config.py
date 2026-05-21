@@ -60,6 +60,9 @@ class LocalAgentConfig(connection.AgentConfig):
   # Top-level shorthand fields — flow into gemini_config.
   model: str | None = None
   api_key: str | None = None
+  vertex: bool | None = None
+  project: str | None = None
+  location: str | None = None
 
   @pydantic.field_validator("app_data_dir")
   def _validate_app_data_dir(cls, v: str | None) -> str | None:
@@ -87,6 +90,12 @@ class LocalAgentConfig(connection.AgentConfig):
             "'gemini_config.api_key'. Use one or the other."
         )
       self.gemini_config.api_key = self.api_key
+    if self.vertex is not None:
+      self.gemini_config.vertex = self.vertex
+    if self.project is not None:
+      self.gemini_config.project = self.project
+    if self.location is not None:
+      self.gemini_config.location = self.location
     return self
 
   @pydantic.model_validator(mode="after")

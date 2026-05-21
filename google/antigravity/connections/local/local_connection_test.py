@@ -1720,6 +1720,20 @@ class LocalConnectionStrategyConfigTest(parameterized.TestCase):
     config = strategy._build_harness_config()
     self.assertEqual(config.gemini_config.api_key, "shared-key")
 
+  def test_vertex_config_propagates(self):
+    """Verifies that Vertex configuration fields propagate to proto."""
+    strategy = self._make_strategy(
+        gemini_config=types.GeminiConfig(
+            vertex=True,
+            project="my-project",
+            location="us-central1",
+        )
+    )
+    config = strategy._build_harness_config()
+    self.assertTrue(config.gemini_config.use_vertex)
+    self.assertEqual(config.gemini_config.project, "my-project")
+    self.assertEqual(config.gemini_config.location, "us-central1")
+
   def test_session_config_save_dir_stored(self):
     """Verifies that session_config.save_dir is preserved on the strategy.
 
@@ -1843,6 +1857,39 @@ class LocalConnectionStrategyApiKeyTest(unittest.IsolatedAsyncioTestCase):
     """
     strategy = self._make_strategy(gemini_config=types.GeminiConfig())
     with self.assertRaises(types.AntigravityValidationError):
+      async with strategy:
+        pass
+
+  @mock.patch.dict("os.environ", {}, clear=True)
+  async def test_raises_without_auth_in_vertex_mode(self):
+    """Verifies strategy raises validation error when Vertex is set but no project/location or api_key provided."""
+    strategy = self._make_strategy(
+        gemini_config=types.GeminiConfig(vertex=True)
+    )
+    with self.assertRaises(types.AntigravityValidationError) as ctx:
+      async with strategy:
+        pass
+    self.assertIn("project and location, or an API key", str(ctx.exception))
+
+  @mock.patch.dict("os.environ", {}, clear=True)
+  @mock.patch("subprocess.Popen")
+  async def test_accepts_vertex_config_with_project_location(self, mock_popen):
+    """Verifies entry does not raise when Vertex is enabled and project/location are provided."""
+    mock_proc = mock.MagicMock()
+    mock_proc.stdin = mock.MagicMock()
+    mock_proc.stdout = mock.MagicMock()
+    mock_proc.stderr = mock.MagicMock()
+    mock_proc.stdout.read.return_value = b""
+    mock_popen.return_value = mock_proc
+
+    strategy = self._make_strategy(
+        gemini_config=types.GeminiConfig(
+            vertex=True,
+            project="my-project",
+            location="us-central1",
+        )
+    )
+    with self.assertRaises(RuntimeError):
       async with strategy:
         pass
 

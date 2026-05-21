@@ -1448,6 +1448,12 @@ class LocalConnectionStrategy(connection.ConnectionStrategy):
       if thinking_level is not None:
         gemini_config_proto.thinking_level = thinking_level.value
 
+      gemini_config_proto.use_vertex = self._gemini_config.vertex
+      if self._gemini_config.project is not None:
+        gemini_config_proto.project = self._gemini_config.project
+      if self._gemini_config.location is not None:
+        gemini_config_proto.location = self._gemini_config.location
+
     workspace_protos = [
         localharness_pb2.Workspace(
             filesystem_workspace=localharness_pb2.FilesystemWorkspace(
@@ -1534,15 +1540,24 @@ class LocalConnectionStrategy(connection.ConnectionStrategy):
     # Fail fast if no API key is available. The localharness binary requires
     # a Gemini API key to call the Gemini API; without one it silently returns
     # empty responses.
+    use_vertex = self._gemini_config.vertex if self._gemini_config else False
     api_key = (
         self._gemini_config.api_key if self._gemini_config else None
     ) or os.environ.get("GEMINI_API_KEY")
-    if not api_key:
+    if not use_vertex and not api_key:
       raise types.AntigravityValidationError(
           "A Gemini API key is required. Set it via"
           " GeminiConfig(api_key=...) or the GEMINI_API_KEY environment"
           " variable."
       )
+    if use_vertex:
+      project = self._gemini_config.project if self._gemini_config else None
+      location = self._gemini_config.location if self._gemini_config else None
+      if not api_key and not (project and location):
+        raise types.AntigravityValidationError(
+            "For Vertex AI, either a GCP project and location, or an API key"
+            " (Express Mode) must be set."
+        )
 
     harness_config = self._build_harness_config()
     input_config = localharness_pb2.InputConfig(

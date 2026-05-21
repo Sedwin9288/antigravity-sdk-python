@@ -161,10 +161,16 @@ class GeminiConfig(pydantic.BaseModel):
   Attributes:
     api_key: Shared API key for all models. Falls back to $GEMINI_API_KEY if not
       set. Individual ModelEntry instances can override this.
+    vertex: If True, uses the Vertex AI backend instead of Gemini Developer API.
+    project: GCP Project ID for Vertex AI.
+    location: GCP Location/Region for Vertex AI (e.g., "us-central1").
     models: Per-modality model selection and configuration.
   """
 
   api_key: str | None = None
+  vertex: bool = False
+  project: str | None = None
+  location: str | None = None
   models: ModelConfig = pydantic.Field(default_factory=ModelConfig)
 
 
