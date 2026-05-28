@@ -84,12 +84,15 @@ if [[ -n "${PUBLISH_PREBUILT_VERSION:-}" ]]; then
 
   # Impersonate the agy-sdk-stager service account keylessly using Kokoro's ambient credentials
   echo "--- Activating agy-sdk-stager impersonation ---"
-  gcloud config set auth/impersonate_service_account agy-sdk-stager@agy-sdk.iam.gserviceaccount.com
 
-  gcloud storage cp "${GCS_SOURCE}"/*.whl "${DIST_DIR}/"
-
-  # Unset stager impersonation to return to default credentials
-  gcloud config unset auth/impersonate_service_account
+  # Isolate the gcloud config directory to prevent parallel SQLite token database locks
+  GCLOUD_TEMP_CONFIG=$(mktemp -d)
+  (
+    export CLOUDSDK_CONFIG="${GCLOUD_TEMP_CONFIG}"
+    gcloud config set auth/impersonate_service_account agy-sdk-stager@agy-sdk.iam.gserviceaccount.com
+    gcloud storage cp "${GCS_SOURCE}"/*.whl "${DIST_DIR}/"
+  )
+  rm -rf "${GCLOUD_TEMP_CONFIG}"
 else
   if [[ -z "${VERSION}" ]]; then
     VERSION=$(sed -n '/^\[project\]/,/^\[/p' pyproject.toml | grep -E '^version\s*=' | cut -d'"' -f2)
