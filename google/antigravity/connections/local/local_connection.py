@@ -1333,6 +1333,12 @@ def _to_proto_input_content(
   if isinstance(content, str):
     return localharness_pb2.UserInput.Part(text=content)
 
+  if isinstance(content, types.SlashCommand):
+    sc_pb = localharness_pb2.UserInput.SlashCommand(
+        name=content.name,
+    )
+    return localharness_pb2.UserInput.Part(slash_command=sc_pb)
+
   is_semantic_media = isinstance(
       content, (types.Image, types.Document, types.Audio, types.Video)
   )

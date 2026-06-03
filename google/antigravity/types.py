@@ -78,6 +78,8 @@ __all__ = [
     "Audio",
     "Video",
     "Content",
+    "SlashCommand",
+    "BuiltinSlashCommandName",
 ]
 
 # =============================================================================
@@ -1130,7 +1132,30 @@ class Video(_BaseMedia):
     return v
 
 
-ContentPrimitive = str | Image | Document | Audio | Video
+class BuiltinSlashCommandName(str, enum.Enum):
+  """Supported system slash commands.
+
+  Attributes:
+    PLAN: Plan carefully before executing a task (generates an implementation
+      plan artifact and awaits user approval).
+  """
+
+  PLAN = "plan"
+
+
+class SlashCommand(pydantic.BaseModel):
+  """Slash command context primitive.
+
+  Attributes:
+    name: The strict BuiltinSlashCommandName enum.
+  """
+
+  model_config = pydantic.ConfigDict(frozen=True)
+
+  name: BuiltinSlashCommandName
+
+
+ContentPrimitive = str | Image | Document | Audio | Video | SlashCommand
 Content = ContentPrimitive | Sequence[ContentPrimitive]
 
 # Registry mapping each supported MIME type to its media class.

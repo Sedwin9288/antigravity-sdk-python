@@ -3337,6 +3337,28 @@ class LocalConnectionSendTest(unittest.IsolatedAsyncioTestCase):
     self.assertEqual(parts[1]["media"]["mimeType"], "application/pdf")
     self.assertEqual(parts[1]["media"]["data"], "ZmFrZV9wZGY=")  # b"fake_pdf"
 
+  async def test_send_slash_command_populates_complex_user_input(self):
+    """Verifies that a SlashCommand primitive maps to complex_user_input slash_command field."""
+    harness = test_utils.TestLocalHarness(
+        test_case=self,
+        process=self.mock_process,
+    )
+    slash_command = types.SlashCommand(
+        name=types.BuiltinSlashCommandName.PLAN,
+    )
+    await harness.conn.send(slash_command)
+
+    sent_data = await harness.wait_for_response()
+
+    self.assertNotIn("userInput", sent_data)
+    self.assertIn("complexUserInput", sent_data)
+
+    parts = sent_data["complexUserInput"]["parts"]
+    self.assertEqual(len(parts), 1)
+    self.assertIn("slashCommand", parts[0])
+    sc = parts[0]["slashCommand"]
+    self.assertEqual(sc["name"], "plan")
+
   async def test_concurrent_receive_steps_raises(self):
     """Verifies that a second concurrent receive_steps() call raises RuntimeError.
 

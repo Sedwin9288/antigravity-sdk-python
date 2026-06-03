@@ -180,13 +180,15 @@ DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(
     b' \x01(\x0b\x32&.antigravity.localharness.ToolResponseH\x00\x12L\n\x11question_response\x18\x04'
     b' \x01(\x0b\x32/.antigravity.localharness.UserQuestionsResponseH\x00\x12\x16\n\x0chalt_request\x18\x05'
     b' \x01(\x08H\x00\x12\x1b\n\x11\x61utomated_trigger\x18\x06'
-    b' \x01(\tH\x00\x42\x07\n\x05\x65vent"\xdf\x01\n\tUserInput\x12\x37\n\x05parts\x18\x01'
+    b' \x01(\tH\x00\x42\x07\n\x05\x65vent"\xc9\x02\n\tUserInput\x12\x37\n\x05parts\x18\x01'
     b' \x03(\x0b\x32(.antigravity.localharness.UserInput.Part\x1a=\n\x05Media\x12\x11\n\tmime_type\x18\x01'
     b' \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x02'
     b' \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x03'
-    b' \x01(\x0c\x1aZ\n\x04Part\x12\x0e\n\x04text\x18\x01'
+    b' \x01(\x0c\x1a\x1c\n\x0cSlashCommand\x12\x0c\n\x04name\x18\x01'
+    b' \x01(\t\x1a\xa5\x01\n\x04Part\x12\x0e\n\x04text\x18\x01'
     b' \x01(\tH\x00\x12:\n\x05media\x18\x02'
-    b' \x01(\x0b\x32).antigravity.localharness.UserInput.MediaH\x00\x42\x06\n\x04part"O\n\x10ToolConfirmation\x12\x15\n\rtrajectory_id\x18\x01'
+    b' \x01(\x0b\x32).antigravity.localharness.UserInput.MediaH\x00\x12I\n\rslash_command\x18\x03'
+    b' \x01(\x0b\x32\x30.antigravity.localharness.UserInput.SlashCommandH\x00\x42\x06\n\x04part"O\n\x10ToolConfirmation\x12\x15\n\rtrajectory_id\x18\x01'
     b' \x01(\t\x12\x12\n\nstep_index\x18\x02'
     b' \x01(\r\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x03'
     b' \x01(\x08"\xb7\x01\n\x15TrajectoryStateUpdate\x12\x15\n\rtrajectory_id\x18\x02'
@@ -238,8 +240,8 @@ _builder.BuildTopDescriptorsAndMessages(
 )
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_NULLVALUE']._serialized_start = 9373
-  _globals['_NULLVALUE']._serialized_end = 9400
+  _globals['_NULLVALUE']._serialized_start = 9479
+  _globals['_NULLVALUE']._serialized_end = 9506
   _globals['_INPUTCONFIG']._serialized_start = 49
   _globals['_INPUTCONFIG']._serialized_end = 195
   _globals['_INITIALIZECONVERSATIONEVENT']._serialized_start = 197
@@ -349,39 +351,41 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_INPUTEVENT']._serialized_start = 6987
   _globals['_INPUTEVENT']._serialized_end = 7366
   _globals['_USERINPUT']._serialized_start = 7369
-  _globals['_USERINPUT']._serialized_end = 7592
+  _globals['_USERINPUT']._serialized_end = 7698
   _globals['_USERINPUT_MEDIA']._serialized_start = 7439
   _globals['_USERINPUT_MEDIA']._serialized_end = 7500
-  _globals['_USERINPUT_PART']._serialized_start = 7502
-  _globals['_USERINPUT_PART']._serialized_end = 7592
-  _globals['_TOOLCONFIRMATION']._serialized_start = 7594
-  _globals['_TOOLCONFIRMATION']._serialized_end = 7673
-  _globals['_TRAJECTORYSTATEUPDATE']._serialized_start = 7676
-  _globals['_TRAJECTORYSTATEUPDATE']._serialized_end = 7859
-  _globals['_TRAJECTORYSTATEUPDATE_STATE']._serialized_start = 7794
-  _globals['_TRAJECTORYSTATEUPDATE_STATE']._serialized_end = 7859
-  _globals['_STRUCT']._serialized_start = 7861
-  _globals['_STRUCT']._serialized_end = 7918
-  _globals['_FIELD']._serialized_start = 7920
-  _globals['_FIELD']._serialized_end = 7989
-  _globals['_VALUE']._serialized_start = 7992
-  _globals['_VALUE']._serialized_end = 8303
-  _globals['_LISTVALUE']._serialized_start = 8305
-  _globals['_LISTVALUE']._serialized_end = 8365
-  _globals['_TOOLCALL']._serialized_start = 8367
-  _globals['_TOOLCALL']._serialized_end = 8480
-  _globals['_TOOLRESPONSE']._serialized_start = 8483
-  _globals['_TOOLRESPONSE']._serialized_end = 8645
-  _globals['_USERQUESTIONSRESPONSE']._serialized_start = 8648
-  _globals['_USERQUESTIONSRESPONSE']._serialized_end = 8916
-  _globals['_USERQUESTIONSRESPONSE_QUESTIONSRESPONSE']._serialized_start = 8824
-  _globals['_USERQUESTIONSRESPONSE_QUESTIONSRESPONSE']._serialized_end = 8906
-  _globals['_USERQUESTIONANSWER']._serialized_start = 8919
-  _globals['_USERQUESTIONANSWER']._serialized_end = 9053
-  _globals['_MULTIPLECHOICEANSWER']._serialized_start = 9055
-  _globals['_MULTIPLECHOICEANSWER']._serialized_end = 9137
+  _globals['_USERINPUT_SLASHCOMMAND']._serialized_start = 7502
+  _globals['_USERINPUT_SLASHCOMMAND']._serialized_end = 7530
+  _globals['_USERINPUT_PART']._serialized_start = 7533
+  _globals['_USERINPUT_PART']._serialized_end = 7698
+  _globals['_TOOLCONFIRMATION']._serialized_start = 7700
+  _globals['_TOOLCONFIRMATION']._serialized_end = 7779
+  _globals['_TRAJECTORYSTATEUPDATE']._serialized_start = 7782
+  _globals['_TRAJECTORYSTATEUPDATE']._serialized_end = 7965
+  _globals['_TRAJECTORYSTATEUPDATE_STATE']._serialized_start = 7900
+  _globals['_TRAJECTORYSTATEUPDATE_STATE']._serialized_end = 7965
+  _globals['_STRUCT']._serialized_start = 7967
+  _globals['_STRUCT']._serialized_end = 8024
+  _globals['_FIELD']._serialized_start = 8026
+  _globals['_FIELD']._serialized_end = 8095
+  _globals['_VALUE']._serialized_start = 8098
+  _globals['_VALUE']._serialized_end = 8409
+  _globals['_LISTVALUE']._serialized_start = 8411
+  _globals['_LISTVALUE']._serialized_end = 8471
+  _globals['_TOOLCALL']._serialized_start = 8473
+  _globals['_TOOLCALL']._serialized_end = 8586
+  _globals['_TOOLRESPONSE']._serialized_start = 8589
+  _globals['_TOOLRESPONSE']._serialized_end = 8751
+  _globals['_USERQUESTIONSRESPONSE']._serialized_start = 8754
+  _globals['_USERQUESTIONSRESPONSE']._serialized_end = 9022
+  _globals['_USERQUESTIONSRESPONSE_QUESTIONSRESPONSE']._serialized_start = 8930
+  _globals['_USERQUESTIONSRESPONSE_QUESTIONSRESPONSE']._serialized_end = 9012
+  _globals['_USERQUESTIONANSWER']._serialized_start = 9025
+  _globals['_USERQUESTIONANSWER']._serialized_end = 9159
+  _globals['_MULTIPLECHOICEANSWER']._serialized_start = 9161
+  _globals['_MULTIPLECHOICEANSWER']._serialized_end = 9243
   _globals['_MEDIA']._serialized_start = 7439
   _globals['_MEDIA']._serialized_end = 7500
-  _globals['_USAGEMETADATA']._serialized_start = 9203
-  _globals['_USAGEMETADATA']._serialized_end = 9371
+  _globals['_USAGEMETADATA']._serialized_start = 9309
+  _globals['_USAGEMETADATA']._serialized_end = 9477
 # @@protoc_insertion_point(module_scope)
