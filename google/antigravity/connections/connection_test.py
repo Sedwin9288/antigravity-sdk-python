@@ -96,6 +96,31 @@ class AgentConfigTest(unittest.TestCase):
     with self.assertRaises(ValueError):
       ConcreteConfig(response_schema=42)
 
+  def test_model_copy_deep_preserves_executable_references(self):
+    class ConcreteConfig(connection.AgentConfig):
+
+      def create_strategy(self, *, tool_runner, hook_runner):
+        return None
+
+    def my_tool():
+      pass
+
+    my_hook = object()
+    my_trigger = object()
+    my_policy = object()
+
+    config = ConcreteConfig(
+        tools=[my_tool],
+        hooks=[my_hook],
+        triggers=[my_trigger],
+        policies=[my_policy],
+    )
+    copied = config.model_copy(deep=True)
+    self.assertIs(copied.tools[0], my_tool)
+    self.assertIs(copied.hooks[0], my_hook)
+    self.assertIs(copied.triggers[0], my_trigger)
+    self.assertIs(copied.policies[0], my_policy)
+
 
 if __name__ == "__main__":
   unittest.main()

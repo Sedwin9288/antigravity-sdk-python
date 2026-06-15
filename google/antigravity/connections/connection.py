@@ -25,6 +25,7 @@ backend type and how to tear it down.
 import abc
 import json
 from typing import Annotated, Any, AsyncIterator, Callable
+from typing import Any, AsyncIterator, Callable, Mapping
 import pydantic
 from google.antigravity import types
 from google.antigravity.models import _coerce_models_list
@@ -78,6 +79,23 @@ class AgentConfig(abc.ABC, pydantic.BaseModel):
         f"Unsupported response_schema format: {type(v).__name__}. "
         "Expected a JSON string, dict, or pydantic.BaseModel subclass."
     )
+
+  def model_copy(
+      self, *, update: Mapping[str, Any] | None = None, deep: bool = False
+  ) -> "AgentConfig":
+    # Override model_copy to prevent deep-copying fields containing callables
+    # or stateful objects (tools, hooks, triggers, policies). Deep-copying
+    # these fields is destructive because it breaks reference identity (e.g.,
+    # duplicating stateful objects that bound methods belong to), making it
+    # impossible to observe side-effects on the original instances from the
+    # outside.
+    copied = super().model_copy(update=update, deep=deep)
+    if deep:
+      copied.tools = list(self.tools)
+      copied.hooks = list(self.hooks)
+      copied.triggers = list(self.triggers)
+      copied.policies = list(self.policies)
+    return copied
 
   @abc.abstractmethod
   def create_strategy(

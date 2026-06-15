@@ -227,12 +227,20 @@ class LocalAgentConfig(connection.AgentConfig):
           stacklevel=3,
       )
 
-    if self.models is not None and (
-        self.gemini_config is not None
-        or self.model is not None
-        or self.vertex is not None
-        or self.project is not None
-        or self.location is not None
+    user_provided_models = (
+        "models" in self.model_fields_set and self.models is not None
+    )
+    user_provided_gemini_config = (
+        "gemini_config" in self.model_fields_set
+        and self.gemini_config is not None
+    )
+    user_provided_shorthands = any(
+        field in self.model_fields_set and getattr(self, field) is not None
+        for field in ["model", "vertex", "project", "location"]
+    )
+
+    if user_provided_models and (
+        user_provided_gemini_config or user_provided_shorthands
     ):
       raise ValueError(
           "Cannot set both the new 'models' list and the legacy"
