@@ -540,11 +540,13 @@ class LocalConnection(connection.Connection):
       ws: Any,
       tool_runner: t_runner.ToolRunner | None = None,
       hook_runner: h_runner.HookRunner | None = None,
+      initial_history: Sequence[types.Step] | None = None,
   ):
     self._hook_runner = hook_runner
     self._process = process
     self._ws = ws
     self._tool_runner = tool_runner
+    self.__initial_history = initial_history or []
     self._step_trackers: dict[tuple[str, int], _StepTracker] = {}
     self._step_queue = asyncio.Queue()
     self._background_tasks = set()
@@ -595,6 +597,11 @@ class LocalConnection(connection.Connection):
   def is_idle(self) -> bool:
     """Returns True if the connection is idle and ready for input."""
     return self._is_idle.is_set()
+
+  @property
+  def _initial_history(self) -> Sequence[types.Step]:
+    """Returns the pre-existing session steps restored during handshake."""
+    return self.__initial_history
 
   @property
   def conversation_id(self) -> str:
@@ -1807,6 +1814,20 @@ class LocalConnectionStrategy(connection.ConnectionStrategy):
           config=harness_config
       )
       await ws.send(json_format.MessageToJson(init_event))
+      raw_init_resp = await ws.recv()
+      initial_history = []
+      if isinstance(raw_init_resp, (str, bytes)):
+        init_resp_event = localharness_pb2.OutputEvent()
+        json_format.Parse(raw_init_resp, init_resp_event)
+        init_resp = init_resp_event.initialize_conversation_response
+        initial_history = [
+            LocalConnectionStep.from_dict(
+                json_format.MessageToDict(
+                    step_update_proto, preserving_proto_field_name=True
+                )
+            )
+            for step_update_proto in init_resp.history
+        ]
     except Exception as e:
       process.kill()
       stderr_output = process.stderr.read().decode("utf-8")
@@ -1819,6 +1840,7 @@ class LocalConnectionStrategy(connection.ConnectionStrategy):
         ws=ws,
         tool_runner=self._tool_runner,
         hook_runner=self._hook_runner,
+        initial_history=initial_history,
     )
     self._connection._start_stderr_reader(process.stderr)
 

@@ -52,12 +52,32 @@ class LocalConnectionTest(unittest.IsolatedAsyncioTestCase):
     self.mock_process = mock.MagicMock(spec=subprocess.Popen)
     self.tool_runner = tool_runner.ToolRunner()
 
-  def _make_harness(self, hook_runner=None):
+  def _make_harness(self, hook_runner=None, initial_history=None):
     return test_utils.TestLocalHarness(
         test_case=self,
         process=self.mock_process,
         tool_runner=self.tool_runner,
         hook_runner=hook_runner,
+        initial_history=initial_history,
+    )
+
+  async def test_initial_handshake_synchronization(self):
+    """Verifies that L2 connections receive restored historical steps synchronously during initialization and start fully idle."""
+    hist_step = local_connection.LocalConnectionStep(
+        step_index=1,
+        content="Historical text",
+        status=types.StepStatus.DONE,
+        source=types.StepSource.MODEL,
+    )
+    harness = self._make_harness(initial_history=[hist_step])
+
+    # 1. Confirm connection starts 100% fully idle by default
+    self.assertTrue(harness.conn.is_idle)
+
+    # 2. Confirm historical steps are exposed immediately on _initial_history
+    self.assertEqual(len(harness.conn._initial_history), 1)
+    self.assertEqual(
+        harness.conn._initial_history[0].content, "Historical text"
     )
 
   async def test_receive_steps_basic(self):

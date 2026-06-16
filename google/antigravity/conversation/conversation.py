@@ -24,7 +24,7 @@ Conversation directly with any ConnectionStrategy.
 """
 
 import contextlib
-from typing import Any, AsyncIterator
+from typing import Any, AsyncIterator, Sequence
 
 from google.antigravity import types
 from google.antigravity.connections import connection
@@ -78,6 +78,7 @@ class Conversation:
       conn: connection.Connection,
       *,
       max_history_size: int = _DEFAULT_MAX_HISTORY_SIZE,
+      history: Sequence[types.Step] | None = None,
   ):
     """Initializes the conversation with a connection and empty history.
 
@@ -94,6 +95,13 @@ class Conversation:
     self._max_history_size = max_history_size
     self._cumulative_usage = _zero_usage()
     self._turn_usage: types.UsageMetadata | None = None
+    for step in history or []:
+      self._steps.append(step)
+      if step.type == types.StepType.COMPACTION:
+        self._compaction_indices.append(len(self._steps) - 1)
+      if step.usage_metadata:
+        _add_usage(self._cumulative_usage, step.usage_metadata)
+      self._enforce_max_history()
 
   @classmethod
   @contextlib.asynccontextmanager
@@ -110,7 +118,8 @@ class Conversation:
       A new Conversation instance.
     """
     async with strategy:
-      yield cls(strategy.connect())
+      conn = strategy.connect()
+      yield cls(conn, history=conn._initial_history)
 
   # ---------------------------------------------------------------------------
   # Core send / receive
@@ -132,7 +141,7 @@ class Conversation:
       prompt: The user message to send.
       **kwargs: Strategy-specific options.
     """
-    if not self._connection.is_idle:
+    if self._connection.is_idle is False:
       try:
         async for _ in self.receive_steps():
           pass

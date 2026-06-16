@@ -24,8 +24,7 @@ backend type and how to tear it down.
 
 import abc
 import json
-from typing import Any, AsyncIterator, Callable
-from typing import Any, AsyncIterator, Callable, Mapping
+from typing import Any, AsyncIterator, Callable, Mapping, Sequence
 import pydantic
 from google.antigravity import types
 
@@ -132,6 +131,11 @@ class Connection(abc.ABC):
   def is_idle(self) -> bool:
     """Returns True if the connection is idle and ready for input."""
     return True
+
+  @property
+  def _initial_history(self) -> Sequence[types.Step]:
+    """Returns the pre-existing session steps restored during handshake."""
+    return []
 
   @property
   def conversation_id(self) -> str:

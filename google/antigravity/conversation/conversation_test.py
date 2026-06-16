@@ -936,6 +936,27 @@ class ConversationUsageMetadataTest(unittest.IsolatedAsyncioTestCase):
 
     self.assertIsNone(result.usage_metadata)
 
+  async def test_initialization_with_history_usage(self):
+    """Verifies that historical steps populate total_usage but NOT turn_usage."""
+    hist_step1 = self._make_step_with_usage(0, prompt=100, total=120)
+    hist_step2 = self._make_step_with_usage(1, prompt=200, total=240)
+
+    mock_connection = mock.MagicMock(spec=connection.Connection)
+    mock_connection._initial_history = [hist_step1, hist_step2]
+    mock_connection.wait_for_idle = mock.AsyncMock()
+    mock_connection.send = mock.AsyncMock()
+
+    conv = conversation.Conversation(
+        mock_connection, history=[hist_step1, hist_step2]
+    )
+
+    # Total cumulative usage must correctly sum the historical steps
+    self.assertEqual(conv.total_usage.prompt_token_count, 300)
+    self.assertEqual(conv.total_usage.total_token_count, 360)
+
+    # Turn usage must be completely clean (None)
+    self.assertIsNone(conv._last_turn_usage)
+
 
 class ConversationSendDrainTest(unittest.IsolatedAsyncioTestCase):
   """Validates send() drain-to-history when a prior turn has not been consumed."""
