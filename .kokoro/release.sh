@@ -93,8 +93,9 @@ if [[ -n "${PUBLISH_PREBUILT_VERSION:-}" ]]; then
   (
     export CLOUDSDK_CONFIG="${GCLOUD_TEMP_CONFIG}"
     gcloud config set auth/impersonate_service_account agy-sdk-stager@agy-sdk.iam.gserviceaccount.com
-    # Force token fetch to populate the cache before parallel download threads start
-    gcloud auth print-access-token > /dev/null
+    # Disable parallel downloads to prevent SQLite token cache lock collisions
+    gcloud config set storage/process_count 1
+    gcloud config set storage/thread_count 1
     gcloud storage cp "${GCS_SOURCE}"/*.whl "${DIST_DIR}/"
   )
   rm -rf "${GCLOUD_TEMP_CONFIG}"
