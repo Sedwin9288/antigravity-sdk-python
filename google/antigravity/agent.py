@@ -16,18 +16,16 @@
 
 import contextlib
 import logging
+from typing import cast
 
 from google.antigravity import types
 from google.antigravity.connections import connection as connection_module
 from google.antigravity.conversation import conversation
 from google.antigravity.hooks import hook_runner
-from google.antigravity.hooks import hooks
 from google.antigravity.hooks import policy
-from google.antigravity.mcp import bridge
 from google.antigravity.tools import tool_context
 from google.antigravity.tools import tool_runner
 from google.antigravity.triggers import trigger_runner
-from google.antigravity.triggers import triggers as triggers_lib
 
 
 __all__ = ["Agent"]
@@ -44,15 +42,15 @@ class Agent:
     """
     self._config = config.model_copy(deep=True)
     if self._config.response_schema:
-      self._config.capabilities.finish_tool_schema_json = (
-          self._config.response_schema
+      # The response_schema is validated/stringified in AgentConfig.
+      self._config.capabilities.finish_tool_schema_json = cast(
+          str, self._config.response_schema
       )
     self._strategy = None
     self._conversation = None
     self._tool_runner = None
     self._hook_runner = None
     self._trigger_runner = None
-    self._mcp_bridge = None
     # Use the original config (not self._config) for hooks and triggers:
     # model_copy(deep=True) creates new objects, breaking reference equality
     # for user-provided hooks/triggers. The list() snapshot prevents the
@@ -60,34 +58,6 @@ class Agent:
     self._pending_hooks = list(config.hooks)
     self._pending_triggers = list(config.triggers)
     self._exit_stack = contextlib.AsyncExitStack()
-
-  def register_hook(self, hook: hooks.Hook):
-    """Registers a hook by inferring its type.
-
-    Args:
-        hook: The hook to register.
-    """
-    if not self._hook_runner:
-      self._pending_hooks.append(hook)
-      return
-    self._hook_runner.register_hook(hook)
-
-  def register_trigger(self, trigger: triggers_lib.Trigger):
-    """Registers a trigger.
-
-    Cannot be called after the agent has started.
-
-    Args:
-      trigger: The trigger function to register.
-
-    Raises:
-      RuntimeError: If the agent has already started.
-    """
-    if self._trigger_runner:
-      raise RuntimeError(
-          "Cannot register triggers after the agent has started."
-      )
-    self._pending_triggers.append(trigger)
 
   async def __aenter__(self) -> "Agent":
     """Starts the agent session.
@@ -140,16 +110,6 @@ class Agent:
         )
 
       all_tools = list(self._config.tools)
-      # Connect MCP servers
-      if self._config.mcp_servers:
-        logging.info("Connecting to MCP servers...")
-        self._mcp_bridge = bridge.McpBridge()
-        self._exit_stack.push_async_callback(self._mcp_bridge.stop)
-
-        for server_cfg in self._config.mcp_servers:
-          await self._mcp_bridge.connect(server_cfg)
-        all_tools.extend(self._mcp_bridge.tools)
-
       self._tool_runner = tool_runner.ToolRunner(tools=all_tools)
 
       self._strategy = self._config.create_strategy(
@@ -176,7 +136,7 @@ class Agent:
       # Wire ToolContext into ToolRunner so tools can access
       # conversation capabilities (same pattern as TriggerRunner).
       if self._tool_runner:
-        ctx = tool_context.ToolContext(self.conversation.connection)
+        ctx = tool_context.ToolContext(self.conversation)
         self._tool_runner.set_context(ctx)
 
       return self

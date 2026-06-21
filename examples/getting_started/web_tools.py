@@ -12,42 +12,48 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Simple hello world example for Google Antigravity SDK.
-
-This example demonstrates the simplest way to interact with an agent:
-- Creating a configuration (and how to explicitly select a model).
-- Using the Agent context manager.
-- Sending a simple prompt and awaiting the full text response.
+"""Example demonstrating web tools using Google Antigravity SDK.
 
 To run:
-  python hello_world.py
-
-Criteria for correct script performance:
-  1. The script exits cleanly with return code 0 (no unhandled exceptions).
-  2. The agent produces a non-empty text response.
-  3. The response contains "Hello World" or a close greeting variant.
+  python web_tools.py
 """
 
 import asyncio
 
 from google.antigravity import Agent
+from google.antigravity import CapabilitiesConfig
 from google.antigravity import LocalAgentConfig
+from google.antigravity import types
 
 
 async def main() -> None:
-  # To explicitly set the model, pass it to LocalAgentConfig:
-  # config = LocalAgentConfig(model="gemini-3.5-flash")
-  config = LocalAgentConfig()
+  """Runs the web tools example.
+
+  This function initializes an agent with web search capabilities,
+  sends a query about the world population, and prints the agent's response.
+  """
+  # Configure the agent to use the web search tool.
+  config = LocalAgentConfig(
+      capabilities=CapabilitiesConfig(
+          enabled_tools=[
+              types.BuiltinTools.SEARCH_WEB,
+          ]
+      ),
+  )
 
   async with Agent(config) as my_agent:
-    prompt = "Say 'Hello World!'"
-    print(f"  User: {prompt}")
+    prompt = (
+        "What is the current weather and temperature in New York City right"
+        " now? Please provide the source."
+    )
+    print(f"User: {prompt}\n")
 
+    print("Agent is thinking and searching...")
     response = await my_agent.chat(prompt)
 
     # Await the full aggregated text response.
     response_text = await response.text()
-    print(f"  Agent: {response_text}")
+    print(f"\nAgent Response:\n{response_text}")
 
 
 if __name__ == "__main__":

@@ -19,8 +19,10 @@ and the AntigravityValidationError wrapper.
 """
 
 import asyncio
+from collections.abc import AsyncIterator
 import pathlib
 import tempfile
+from typing import Any, cast
 import unittest
 from unittest import mock
 
@@ -87,7 +89,7 @@ class ToolCallTest(unittest.TestCase):
     Why: Forward compatibility — newer backends may add fields.
     How: Constructs a ToolCall with an unknown field and asserts it's absent.
     """
-    tc = types.ToolCall(name="tool", unknown_field="value")
+    tc = types.ToolCall(name="tool", **cast(Any, {"unknown_field": "value"}))
     self.assertFalse(hasattr(tc, "unknown_field"))
 
   def test_missing_name_raises(self):
@@ -161,7 +163,7 @@ class ToolResultTest(unittest.TestCase):
     Why: Consistent extra field handling across all models.
     How: Passes an unknown field and asserts it's not present.
     """
-    tr = types.ToolResult(name="tool", unknown="value")
+    tr = types.ToolResult(name="tool", **cast(Any, {"unknown": "value"}))
     self.assertFalse(hasattr(tr, "unknown"))
 
 
@@ -365,7 +367,7 @@ class AntigravityValidationErrorTest(unittest.TestCase):
   def test_from_pydantic(self):
     """Verifies construction from a real Pydantic ValidationError.
 
-    What: Checks the from_pydantic factory method.
+    What: Checks the _from_pydantic factory method.
     Why: This is the primary construction path at SDK boundaries.
     How: Triggers a ValidationError and wraps it.
     """
@@ -376,7 +378,7 @@ class AntigravityValidationErrorTest(unittest.TestCase):
       err = e
 
     self.assertIsNotNone(err, "Expected ValidationError was not raised.")
-    wrapped = types.AntigravityValidationError.from_pydantic(err)
+    wrapped = types.AntigravityValidationError._from_pydantic(err)
     self.assertIn("name", wrapped.message)
     self.assertGreater(len(wrapped.errors), 0)
 
@@ -464,80 +466,44 @@ class ThinkingLevelTest(unittest.TestCase):
     self.assertNotEqual(types.ThinkingLevel.LOW, "high")
 
 
-class GeminiConfigTest(unittest.TestCase):
-  """Tests for the GeminiConfig Pydantic model."""
+class ModelTargetTest(unittest.TestCase):
+  """Tests for the polymorphic ModelTarget hierarchy."""
 
-  def test_default_construction(self):
-    """Verifies that GeminiConfig can be constructed with all defaults."""
-    config = types.GeminiConfig()
-    self.assertIsNone(config.api_key)
-    self.assertEqual(config.models.default.name, "gemini-3.5-flash")
-    self.assertIsNone(config.models.default.generation.thinking_level)
-
-  def test_explicit_field_assignment(self):
-    """Verifies that all fields can be explicitly set."""
-    config = types.GeminiConfig(
-        api_key="test-key",
-        models=types.ModelConfig(
-            default=types.ModelEntry(
-                name="gemini-2.5-pro",
-                generation=types.GenerationConfig(
-                    thinking_level=types.ThinkingLevel.LOW,
-                ),
-            ),
-        ),
+  def test_basic_text_construction(self):
+    options = types.GeminiModelOptions(
+        thinking_level=types.ThinkingLevel.HIGH,
     )
-    self.assertEqual(config.api_key, "test-key")
-    self.assertEqual(config.models.default.name, "gemini-2.5-pro")
+    endpoint = types.GeminiAPIEndpoint(api_key="test-key", options=options)
+    mc = types.ModelTarget(
+        name="gemini-pro",
+        types=[types.ModelType.TEXT],
+        endpoint=endpoint,
+    )
+    self.assertEqual(mc.name, "gemini-pro")
+    self.assertEqual(mc.types, [types.ModelType.TEXT])
+    self.assertIsInstance(mc.endpoint, types.GeminiAPIEndpoint)
+    self.assertEqual(mc.endpoint.api_key, "test-key")
     self.assertEqual(
-        config.models.default.generation.thinking_level,
-        types.ThinkingLevel.LOW,
+        mc.endpoint.options.thinking_level, types.ThinkingLevel.HIGH
     )
 
-  def test_string_coercion_in_model_config(self):
-    """Verifies that ModelConfig coerces strings to ModelEntry."""
-    config = types.ModelConfig(default="gemini-2.5-pro")
-    self.assertIsInstance(config.default, types.ModelEntry)
-    self.assertEqual(config.default.name, "gemini-2.5-pro")
-
-  def test_thinking_level_from_string(self):
-    """Verifies that thinking_level accepts raw string values."""
-    gen = types.GenerationConfig(thinking_level="high")
-    self.assertEqual(gen.thinking_level, types.ThinkingLevel.HIGH)
-
-  def test_thinking_level_invalid_string(self):
-    """Verifies that invalid thinking_level strings raise ValidationError."""
-    with self.assertRaises(pydantic.ValidationError):
-      types.GenerationConfig(thinking_level="turbo")
-
-  def test_per_model_api_key(self):
-    """Verifies per-model API key overrides."""
-    entry = types.ModelEntry(name="model-x", api_key="per-model-key")
-    config = types.GeminiConfig(
-        api_key="shared-key",
-        models=types.ModelConfig(default=entry),
+  def test_vertex_endpoint_construction(self):
+    endpoint = types.VertexEndpoint(project="my-proj", location="us-east1")
+    mc = types.ModelTarget(
+        name="gemini-ultra",
+        types=[types.ModelType.TEXT],
+        endpoint=endpoint,
     )
-    self.assertEqual(config.api_key, "shared-key")
-    self.assertEqual(config.models.default.api_key, "per-model-key")
+    self.assertIsInstance(mc.endpoint, types.VertexEndpoint)
+    self.assertEqual(mc.endpoint.project, "my-proj")
+    self.assertEqual(mc.endpoint.location, "us-east1")
 
-  def test_image_generation_model_default(self):
-    """Verifies the default image generation model."""
-    config = types.ModelConfig()
-    self.assertEqual(
-        config.image_generation.name, "gemini-3.1-flash-image-preview"
+  def test_image_model_construction(self):
+    mc = types.ModelTarget(
+        name="imagen-3",
+        types=[types.ModelType.IMAGE],
     )
-
-  def test_string_coercion_image_generation_slot(self):
-    """Verifies that BeforeValidator coerces string to ModelEntry for image_generation."""
-    config = types.ModelConfig(image_generation="custom-image-model")
-    self.assertIsInstance(config.image_generation, types.ModelEntry)
-    self.assertEqual(config.image_generation.name, "custom-image-model")
-
-  def test_gemini_config_mutable_for_sugar(self):
-    """Verifies GeminiConfig fields can be mutated (needed by AgentConfig sugar)."""
-    config = types.GeminiConfig()
-    config.api_key = "new-key"
-    self.assertEqual(config.api_key, "new-key")
+    self.assertEqual(mc.types, [types.ModelType.IMAGE])
 
 
 class SystemInstructionsTest(unittest.TestCase):
@@ -602,18 +568,24 @@ class SystemInstructionsTest(unittest.TestCase):
     self.assertEqual(si.sections, [])
 
 
-class BuiltinToolsTest(unittest.TestCase):
+class BuiltinToolsTest(parameterized.TestCase):
   """Tests for the BuiltinTools enum."""
 
-  def test_enum_values(self):
+  @parameterized.named_parameters(
+      ("list_dir", types.BuiltinTools.LIST_DIR, "list_directory"),
+      ("search_dir", types.BuiltinTools.SEARCH_DIR, "search_directory"),
+      ("view_file", types.BuiltinTools.VIEW_FILE, "view_file"),
+      ("create_file", types.BuiltinTools.CREATE_FILE, "create_file"),
+      ("edit_file", types.BuiltinTools.EDIT_FILE, "edit_file"),
+      ("run_command", types.BuiltinTools.RUN_COMMAND, "run_command"),
+      ("ask_question", types.BuiltinTools.ASK_QUESTION, "ask_question"),
+      ("search_web", types.BuiltinTools.SEARCH_WEB, "search_web"),
+      ("start_subagent", types.BuiltinTools.START_SUBAGENT, "start_subagent"),
+      ("generate_image", types.BuiltinTools.GENERATE_IMAGE, "generate_image"),
+  )
+  def test_enum_values(self, enum_member, expected_value):
     """Verifies each enum member has the expected string value."""
-    self.assertEqual(types.BuiltinTools.LIST_DIR, "list_directory")
-    self.assertEqual(types.BuiltinTools.SEARCH_DIR, "search_directory")
-    self.assertEqual(types.BuiltinTools.VIEW_FILE, "view_file")
-    self.assertEqual(types.BuiltinTools.CREATE_FILE, "create_file")
-    self.assertEqual(types.BuiltinTools.EDIT_FILE, "edit_file")
-    self.assertEqual(types.BuiltinTools.RUN_COMMAND, "run_command")
-    self.assertEqual(types.BuiltinTools.ASK_QUESTION, "ask_question")
+    self.assertEqual(enum_member, expected_value)
 
   def test_read_only_covers_all_tools(self):
     """Verifies read_only + write tools = full enum.
@@ -630,6 +602,7 @@ class BuiltinToolsTest(unittest.TestCase):
         types.BuiltinTools.ASK_QUESTION,
         types.BuiltinTools.START_SUBAGENT,
         types.BuiltinTools.GENERATE_IMAGE,
+        types.BuiltinTools.SEARCH_WEB,
     }
     self.assertEqual(
         read_only | write_tools,
@@ -1253,7 +1226,7 @@ class ChatResponseStreamTest(unittest.IsolatedAsyncioTestCase):
       yield t_text
 
     mock_conv = mock.MagicMock(spec=conversation.Conversation)
-    mock_conv.last_turn_usage = types.UsageMetadata(
+    mock_conv._last_turn_usage = types.UsageMetadata(
         prompt_token_count=10,
         candidates_token_count=20,
         total_token_count=30,
@@ -1267,6 +1240,55 @@ class ChatResponseStreamTest(unittest.IsolatedAsyncioTestCase):
     self.assertEqual(usage.prompt_token_count, 10)
     self.assertEqual(usage.candidates_token_count, 20)
     self.assertEqual(usage.total_token_count, 30)
+
+  async def test_cancel_delegates_to_conversation(self):
+    """Verifies that cancel() delegates to conversation.cancel() if not done."""
+    async def mock_stream() -> AsyncIterator[types.StreamChunk]:
+      yield types.Text(step_index=1, text="hello")
+      # Keep it open by not ending or throwing yet
+
+    mock_conv = mock.AsyncMock(spec=conversation.Conversation)
+    response = types.ChatResponse(mock_stream(), conversation=mock_conv)
+
+    self.assertFalse(response._is_done)
+
+    await response.cancel()
+    mock_conv.cancel.assert_called_once()
+
+  async def test_cancel_completed_stream_is_noop(self):
+    """Verifies that cancel() is a safe no-op on a completed stream."""
+    async def mock_stream() -> AsyncIterator[types.StreamChunk]:
+      yield types.Text(step_index=1, text="hello")
+
+    mock_conv = mock.AsyncMock(spec=conversation.Conversation)
+    response = types.ChatResponse(mock_stream(), conversation=mock_conv)
+
+    # Resolve the stream to complete it
+    await response.resolve()
+    self.assertTrue(response._is_done)
+
+    await response.cancel()
+    mock_conv.cancel.assert_not_called()
+
+  async def test_stream_cancellation_sets_is_done(self):
+    """Verifies that if stream raises CancelledError, _is_done becomes True."""
+    async def mock_cancelled_stream() -> AsyncIterator[types.StreamChunk]:
+      yield types.Text(step_index=1, text="hello")
+      raise asyncio.CancelledError("Cancelled natively")
+
+    mock_conv = mock.AsyncMock(spec=conversation.Conversation)
+    response = types.ChatResponse(
+        mock_cancelled_stream(), conversation=mock_conv
+    )
+
+    chunks = []
+    with self.assertRaisesRegex(asyncio.CancelledError, "Cancelled natively"):
+      async for chunk in response.chunks:
+        chunks.append(chunk)
+
+    self.assertEqual(len(chunks), 1)
+    self.assertTrue(response._is_done)
+    self.assertIsInstance(response._stream_error, asyncio.CancelledError)
 
   def test_thought_chunk_validation(self):
     """Verifies that the Thought subclass validates Pydantic schemas correctly."""
@@ -1306,10 +1328,20 @@ class McpServerConfigTest(parameterized.TestCase):
           {"name": "stdio_server", "command": "node", "args": ["index.js"]},
       ),
       (
-          "sse",
-          types.McpSseServer,
-          {"name": "sse_server", "url": "http://localhost/sse"},
-          {"name": "sse_server", "url": "http://localhost/sse"},
+          "stdio_with_env",
+          types.McpStdioServer,
+          {
+              "name": "stdio_server",
+              "command": "node",
+              "args": ["index.js"],
+              "env": {"FOO": "bar"},
+          },
+          {
+              "name": "stdio_server",
+              "command": "node",
+              "args": ["index.js"],
+              "env": {"FOO": "bar"},
+          },
       ),
       (
           "http",
@@ -1338,7 +1370,6 @@ class McpServerConfigTest(parameterized.TestCase):
 
   @parameterized.named_parameters(
       ("stdio", types.McpStdioServer, {"command": "node"}),
-      ("sse", types.McpSseServer, {"url": "http://localhost/sse"}),
       ("http", types.McpStreamableHttpServer, {"url": "http://localhost/http"}),
   )
   def test_server_missing_name_raises(self, server_cls, init_kwargs):
@@ -1378,28 +1409,6 @@ class McpServerConfigTest(parameterized.TestCase):
           "disabled_tools",
           ["tool2"],
       ),
-      (
-          "sse_enabled",
-          types.McpSseServer,
-          {
-              "name": "sse_server",
-              "url": "http://localhost/sse",
-              "enabled_tools": ["tool1"],
-          },
-          "enabled_tools",
-          ["tool1"],
-      ),
-      (
-          "sse_disabled",
-          types.McpSseServer,
-          {
-              "name": "sse_server",
-              "url": "http://localhost/sse",
-              "disabled_tools": ["tool2"],
-          },
-          "disabled_tools",
-          ["tool2"],
-      ),
   )
   def test_server_construction_with_filtering(
       self, server_cls, init_kwargs, expected_attr, expected_val
@@ -1425,26 +1434,6 @@ class McpServerConfigTest(parameterized.TestCase):
           {
               "name": "stdio_server",
               "command": "node",
-              "enabled_tools": ["tool1"],
-              "disabled_tools": ["tool1"],
-          },
-      ),
-      (
-          "sse_different_tools",
-          types.McpSseServer,
-          {
-              "name": "sse_server",
-              "url": "http://localhost/sse",
-              "enabled_tools": ["tool1"],
-              "disabled_tools": ["tool2"],
-          },
-      ),
-      (
-          "sse_same_tool",
-          types.McpSseServer,
-          {
-              "name": "sse_server",
-              "url": "http://localhost/sse",
               "enabled_tools": ["tool1"],
               "disabled_tools": ["tool1"],
           },
@@ -1495,6 +1484,59 @@ class McpServerConfigTest(parameterized.TestCase):
     """Verifies that names violating Gemini's regex pattern trigger validation errors."""
     with self.assertRaises(pydantic.ValidationError):
       types.McpStdioServer(name=name, command="node")
+
+
+class SubagentCapabilitiesTest(unittest.TestCase):
+  """Validates the SubagentCapabilities Pydantic model."""
+
+  def test_defaults(self):
+    sc = types.SubagentCapabilities()
+    self.assertIsNone(sc.enabled_tools)
+    self.assertIsNone(sc.disabled_tools)
+
+  def test_mutually_exclusive_ok_enabled(self):
+    sc = types.SubagentCapabilities(
+        enabled_tools=[types.BuiltinTools.EDIT_FILE]
+    )
+    self.assertEqual(sc.enabled_tools, [types.BuiltinTools.EDIT_FILE])
+    self.assertIsNone(sc.disabled_tools)
+
+  def test_mutually_exclusive_ok_disabled(self):
+    sc = types.SubagentCapabilities(
+        disabled_tools=[types.BuiltinTools.RUN_COMMAND]
+    )
+    self.assertIsNone(sc.enabled_tools)
+    self.assertEqual(sc.disabled_tools, [types.BuiltinTools.RUN_COMMAND])
+
+  def test_mutually_exclusive_raises(self):
+    with self.assertRaises(pydantic.ValidationError):
+      types.SubagentCapabilities(
+          enabled_tools=[types.BuiltinTools.EDIT_FILE],
+          disabled_tools=[types.BuiltinTools.RUN_COMMAND],
+      )
+
+
+class SubagentConfigTest(unittest.TestCase):
+  """Validates the SubagentConfig Pydantic model."""
+
+  def test_basic_construction(self):
+    sub = types.SubagentConfig(
+        name="helper",
+        description="helpful agent",
+        system_instructions="always help",
+    )
+    self.assertEqual(sub.name, "helper")
+    self.assertEqual(sub.description, "helpful agent")
+    self.assertEqual(sub.system_instructions, "always help")
+    self.assertIsNone(sub.capabilities)
+    self.assertEqual(sub.tools, [])
+
+  def test_required_fields(self):
+    with self.assertRaises(pydantic.ValidationError):
+      types.SubagentConfig(**{"name": "helper"})  # Missing description
+
+    with self.assertRaises(pydantic.ValidationError):
+      types.SubagentConfig(**{"description": "helpful agent"})  # Missing name
 
 
 if __name__ == "__main__":

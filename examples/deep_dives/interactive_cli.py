@@ -35,10 +35,9 @@ import sys
 from absl import app
 from absl import flags
 from absl import logging
-
+from google.antigravity import Agent
+from google.antigravity import LocalAgentConfig
 from google.antigravity import types
-
-from google.antigravity import Agent, LocalAgentConfig
 from google.antigravity.hooks import policy
 from google.antigravity.utils import interactive
 from google.antigravity.utils.interactive import async_input
@@ -129,11 +128,6 @@ async def run():
       args=[mcp_server_path, "--transport=stdio"],
   )
 
-  gemini_config = types.GeminiConfig(
-      models=types.ModelConfig(
-          default=types.ModelEntry(name=_MODEL_NAME.value),
-      )
-  )
   disabled_tools = (
       [types.BuiltinTools.RUN_COMMAND] if _DISABLE_RUN_COMMAND.value else None
   )
@@ -145,7 +139,7 @@ async def run():
       capabilities=types.CapabilitiesConfig(
           disabled_tools=disabled_tools,
       ),
-      gemini_config=gemini_config,
+      model=_MODEL_NAME.value,
       system_instructions=_SYSTEM_INSTRUCTION.value,
   )
 
